@@ -163,7 +163,7 @@ fun DisplayTasks(
 
             LaunchedEffect(dismissState.targetValue) {
                 if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
-                    delay(300) // Wait for the animation to finish.
+                    delay(300)
                     onSwipeToDelete(Action.DELETE, task)
                 }
             }
@@ -176,7 +176,6 @@ fun DisplayTasks(
             SwipeToDismissBox(
                 state = dismissState,
                 backgroundContent = {
-                    // Only show the red background when swiping from end to start.
                     if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
                         RedBackground(degrees = degrees)
                     }
