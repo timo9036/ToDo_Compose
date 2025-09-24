@@ -152,11 +152,11 @@ fun DisplayTasks(
         ) { task ->
             val dismissState = rememberSwipeToDismissBoxState()
             val dismissDirection = dismissState.dismissDirection
-            val isDismissed = dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart
-                    && dismissState.progress == 1f
-            if (isDismissed && dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+            val isDismissed = dismissState.targetValue != SwipeToDismissBoxValue.Settled
+
+            if (isDismissed && dismissDirection != SwipeToDismissBoxValue.Settled) {
                 val scope = rememberCoroutineScope()
-                SideEffect {
+                LaunchedEffect(Unit) {
                     scope.launch {
                         delay(300)
                         onSwipeToDelete(Action.DELETE, task)
