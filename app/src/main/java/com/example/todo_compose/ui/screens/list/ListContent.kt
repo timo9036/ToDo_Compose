@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -133,7 +134,7 @@ fun HandleListContent(
     }
 }
 
-@ExperimentalAnimationApi
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DisplayTasks(
     modifier: Modifier = Modifier,
@@ -150,54 +151,42 @@ fun DisplayTasks(
                 task.id
             }
         ) { task ->
-            val dismissState = rememberSwipeToDismissBoxState()
-            val dismissDirection = dismissState.dismissDirection
-            val isDismissed = dismissState.targetValue != SwipeToDismissBoxValue.Settled
-
-            if (isDismissed && dismissDirection != SwipeToDismissBoxValue.Settled) {
-                val scope = rememberCoroutineScope()
-                LaunchedEffect(Unit) {
-                    scope.launch {
-                        delay(300)
-                        onSwipeToDelete(Action.DELETE, task)
+            val dismissState = rememberSwipeToDismissBoxState(
+                confirmValueChange = { dismissValue ->
+                    if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
+                        true
+                    } else {
+                        false
                     }
+                }
+            )
+
+            LaunchedEffect(dismissState.targetValue) {
+                if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
+                    delay(300) // Wait for the animation to finish.
+                    onSwipeToDelete(Action.DELETE, task)
                 }
             }
 
             val degrees by animateFloatAsState(
-                if (dismissState.progress in 0f..0.5f) 0f else -45f,
-                label = "Degree animation"
+                targetValue = if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0f else -45f,
+                label = "Icon Rotation"
             )
 
-            var itemAppeared by remember { mutableStateOf(false) }
-            LaunchedEffect(key1 = true) {
-                itemAppeared = true
-            }
-
-//            AnimatedVisibility(
-//                visible = itemAppeared && !isDismissed,
-//                enter = expandVertically(
-//                    animationSpec = tween(
-//                        durationMillis = 300
-//                    )
-//                ),
-//                exit = shrinkVertically(
-//                    animationSpec = tween(
-//                        durationMillis = 300
-//                    )
-//                )
-//            ) {
             SwipeToDismissBox(
                 state = dismissState,
-//                    dismissThresholds = { FractionalThreshold(fraction = 0.2f) },
-                backgroundContent = { RedBackground(degrees = degrees) }
+                backgroundContent = {
+                    // Only show the red background when swiping from end to start.
+                    if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+                        RedBackground(degrees = degrees)
+                    }
+                }
             ) {
                 TaskItem(
                     toDoTask = task,
                     navigateToTaskScreen = navigateToTaskScreen
                 )
             }
-//            }
         }
     }
 }
